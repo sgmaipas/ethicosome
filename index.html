@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ethicosome v1 — Research Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --ok: #047857;
+      --shadow: 0 10px 25px rgba(0,0,0,0.06);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      margin-bottom: 24px;
+      padding: 24px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #ffffff, #eff6ff);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    h1, h2, h3 { margin: 0 0 12px 0; }
+    p { margin: 0 0 12px 0; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin: 12px 0 8px;
+    }
+
+    select, input[type="range"], button, input[type="text"] {
+      width: 100%;
+    }
+
+    select, input[type="text"] {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 14px;
+    }
+
+    .radio-group, .check-group {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .option {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .option input { margin-top: 3px; }
+    .range-wrap { padding: 8px 0 0; }
+
+    .range-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    button {
+      padding: 14px 16px;
+      border: none;
+      border-radius: 14px;
+      background: var(--accent);
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    button:hover { filter: brightness(0.96); }
+
+    .secondary-button {
+      background: #111827;
+      margin-top: 10px;
+    }
+
+    .light-button {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid #bfdbfe;
+      margin-top: 8px;
+    }
+
+    .result-box {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fbfdff;
+      margin-bottom: 12px;
+    }
+
+    .result-box h3 { font-size: 15px; }
+
+    .gauge {
+      width: 100%;
+      height: 16px;
+      background: linear-gradient(to right, #10b981, #84cc16, #facc15, #f97316, #ef4444);
+      border-radius: 999px;
+      position: relative;
+      margin: 10px 0 8px;
+      overflow: visible;
+    }
+
+    #gaugeFill {
+      position: absolute;
+      top: -5px;
+      left: 0%;
+      width: 10px;
+      height: 26px;
+      background: #111827;
+      border-radius: 5px;
+      transition: left 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    .gauge-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .explanation-panel {
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .explanation-panel .step {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .explanation-panel strong { color: #111827; }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #fff;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .pill.warn { color: var(--warn); border-color: #f59e0b; }
+    .pill.danger { color: var(--danger); border-color: #ef4444; }
+    .pill.ok { color: var(--ok); border-color: #10b981; }
+    .pill.blue { color: var(--accent); border-color: #60a5fa; }
+
+    .disclaimer {
+      font-size: 13px;
+      color: var(--muted);
+      border-left: 4px solid var(--accent);
+      padding-left: 12px;
+      margin-top: 12px;
+    }
+
+    .warning {
+      background: #fff7ed;
+      border: 1px solid #fdba74;
+      color: #9a3412;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    .danger-box {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 16px;
+    }
+
+    .tab-button {
+      width: auto;
+      margin: 0;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .tab-button.active {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .case-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: #ffffff;
+    }
+
+    .case-card h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    .case-card dl {
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .case-card dt {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .case-card dd {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .case-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .case-actions button {
+      width: auto;
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .helper-note {
+      padding: 12px;
+      background: var(--accent-soft);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      color: #1e40af;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .method-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>Ethicosome v1</h1>
+      <p class="muted">A structured ethical-risk evaluation prototype integrating classical risk assessment, bioethical modifiers, capped escalation, Supabase case studies, and case-based likelihood support.</p>
+      <span class="pill blue">Educational / research prototype</span>
+      <span class="pill blue">Supabase ready</span>
+      <span class="pill blue">GitHub + Vercel ready</span>
+      <span class="pill blue">ethicosome.org</span>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="section-title">
+            <h2>Part I — Classical Risk</h2>
+          </div>
+
+          <label for="consequence">1. Select the most severe realistic outcome</label>
+          <select id="consequence">
+            <option value="negligible">Mild, transient, reversible effects without intervention need</option>
+            <option value="minor">Minor reversible health effect with limited impact</option>
+            <option value="moderate">Measurable harm or clinically relevant but non-severe effect</option>
+            <option value="major">Serious disease, long-term impairment, or severe injury</option>
+            <option value="catastrophic">Cancer, permanent disability, fetal harm, or death</option>
+          </select>
+          <p class="small muted">The system maps this choice to a consequence category: negligible, minor, moderate, major, or catastrophic.</p>
+
+          <label for="likelihood">2. Estimate likelihood (%)</label>
+          <div class="range-wrap">
+            <input id="likelihood" type="range" min="0" max="100" value="20" />
+            <div class="range-meta">
+              <span>0%</span>
+              <strong><span id="likelihoodValue">20</span>%</strong>
+              <span>100%</span>
+            </div>
+          </div>
+          <p class="small muted">Use the most realistic scenario, based on available evidence, exposure conditions, similar cases, and informed judgment.</p>
+          <button class="light-button" type="button" onclick="document.getElementById('likelihoodHelper').scrollIntoView({behavior:'smooth'});">Help me estimate likelihood</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Part II — Ethical Evaluation</h2>
+          </div>
+
+          <label>3. Vulnerability status</label>
+          <div class="radio-group">
+            <label class="option"><input type="radio" name="vulnerability" value="not_exposed" checked />
+              <span><strong>No vulnerable population realistically exposed</strong><br><span class="small muted">No relevant exposure of susceptible groups is expected in this scenario.</span></span>
+            </label>
+            <label class="option"><input type="radio" name="vulnerability" value="exposed" />
+              <span><strong>Vulnerable population realistically exposed</strong><br><span class="small muted">Susceptible groups such as pregnant individuals or children may realistically be exposed.</span></span>
+            </label>
+            <label class="option"><input type="radio" name="vulnerability" value="bypass" />
+              <span><strong>Bypass (user-defined exclusion)</strong><br><span class="small muted">I assume no exposure of vulnerable populations due to mitigation measures.</span></span>
+            </label>
+          </div>
+
+          <label>4. Ethical inputs</label>
+          <div class="check-group">
+            <label class="option"><input type="checkbox" id="involuntariness" />
+              <span><strong>Involuntariness present</strong><br><span class="small muted">Exposure occurs without meaningful choice or control.</span></span>
+            </label>
+            <label class="option"><input type="checkbox" id="inequality" />
+              <span><strong>Inequality present</strong><br><span class="small muted">The burden of exposure is distributed unequally.</span></span>
+            </label>
+            <label class="option"><input type="checkbox" id="beneficence" />
+              <span><strong>Beneficence unfavorable</strong><br><span class="small muted">The risk–benefit balance is unfavorable or no meaningful benefit exists.</span></span>
+            </label>
+            <label class="option"><input type="checkbox" id="uncertainty" />
+              <span><strong>Uncertainty present</strong><br><span class="small muted">Evidence is limited, conflicting, or insufficient.</span></span>
+            </label>
+          </div>
+
+          <button id="calculateBtn" type="button">Calculate Ethicosome</button>
+          <p class="disclaimer">This tool is intended for educational and research purposes only and does not replace formal risk assessment. Copyright: Sotirios G. Maipas. The development of this tool is the subject of a postdoctoral research project conducted at the Department of Nursing, University of the Peloponnese, Greece, under the supervision of Associate Professor Fotini Tzavella.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="section-title">
+            <h2>Results</h2>
+          </div>
+          <p class="small muted">Outputs reflect integrated classical risk and ethical escalation logic.</p>
+
+          <div class="result-box">
+            <h3>Likelihood classification</h3>
+            <p id="likelihoodClass">—</p>
+          </div>
+
+          <div class="result-box">
+            <h3>Classical risk</h3>
+            <p id="classicalRisk">—</p>
+          </div>
+
+          <div class="result-box">
+            <h3>Derived harm potential</h3>
+            <p id="harmPotential">—</p>
+          </div>
+
+          <div class="result-box">
+            <h3>Ethical load</h3>
+            <p id="ethicalLoad">—</p>
+          </div>
+
+          <div class="result-box">
+            <h3>Final ethicosome</h3>
+            <p id="ethicosome">—</p>
+          </div>
+
+          <div class="result-box">
+            <h3>Risk Gauge</h3>
+            <div class="gauge">
+              <div id="gaugeFill"></div>
+            </div>
+            <div class="gauge-labels">
+              <span>Low</span>
+              <span>Medium</span>
+              <span>Significant</span>
+              <span>High</span>
+              <span>Critical</span>
+            </div>
+          </div>
+
+          <div class="result-box">
+            <h3>How was this result calculated?</h3>
+            <div id="explanation" class="explanation-panel">—</div>
+          </div>
+
+          <div class="result-box">
+            <h3>Flags</h3>
+            <div id="flags">—</div>
+          </div>
+
+          <div id="warningArea"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Methodology Summary</h2>
+          </div>
+          <ul class="method-list">
+            <li>Consequence and likelihood determine the classical risk.</li>
+            <li>Ethical inputs are coded internally but interpreted qualitatively.</li>
+            <li>Harm potential is derived from consequence and exposure context.</li>
+            <li>Ethical load drives capped escalation: +0, +1, or +2 levels.</li>
+            <li>Bypass of vulnerable populations is recorded and flagged.</li>
+            <li>Case studies are loaded from Supabase when credentials are configured.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="likelihoodHelper">
+      <div class="section-title">
+        <h2>Likelihood Support Panel</h2>
+      </div>
+      <p class="muted">Use these case cards as structured guidance. They do not automatically determine probability; they help users make a transparent, evidence-informed estimate.</p>
+
+      <div class="status-row">
+        <span class="pill blue" id="dataStatus">Data source: checking...</span>
+      </div>
+
+      <div class="helper-note">
+        Suggested interpretation: select the project category closest to your scenario, review comparable cases, then adjust the likelihood slider using professional judgment.
+      </div>
+
+      <label for="caseCategory">Select project category</label>
+      <select id="caseCategory">
+        <option value="land_air_transport">Land and air transport projects</option>
+        <option value="hydraulic_projects">Hydraulic projects</option>
+        <option value="port_projects">Port projects</option>
+        <option value="environmental_infrastructure">Environmental infrastructure systems</option>
+        <option value="extractive_activities">Extractive activities</option>
+        <option value="tourism_urban_sport_leisure">Tourism facilities and urban development, building, sport and leisure projects</option>
+        <option value="poultry_farms">Poultry farms</option>
+        <option value="aquaculture">Aquaculture</option>
+        <option value="processing_industrial">Processing, industrial and related facilities</option>
+        <option value="renewable_energy">Renewable energy sources</option>
+        <option value="energy_fuel_chemical_transport">Transport of energy, fuel and chemicals</option>
+        <option value="special_projects">Special projects and activities</option>
+      </select>
+
+      <label for="caseSearch">Search cases</label>
+      <input type="text" id="caseSearch" placeholder="Search by title, topic, outcome, population, or context..." />
+
+      <div class="tabs" id="caseTabs"></div>
+      <div id="caseCards"></div>
+    </div>
+  </div>
+
+  <script>
+    // =============================
+    // SUPABASE CONFIGURATION
+    // =============================
+    // Replace these with your Supabase project URL and anon public key.
+    // Never use the service_role key in frontend code.
+    const SUPABASE_URL = 'https://pgngeqnuhzmgjioraobd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Z9onAH0Yd3dA_qxwPLrgCQ_3jjC-1fy';
+
+    const supabaseConfigured =
+      SUPABASE_URL &&
+      SUPABASE_ANON_KEY &&
+      !SUPABASE_URL.includes('ADD_') &&
+      !SUPABASE_ANON_KEY.includes('ADD_');
+
+    const supabaseClient = supabaseConfigured
+      ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    let caseStudies = [];
+    let currentCategory = 'land_air_transport';
+    let currentSearch = '';
+
+    const fallbackCaseStudies = [
+      {
+        category: 'land_air_transport',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe the project context here. Example: road construction, railway, airport-related activity, traffic corridor, etc.',
+        population: 'Describe the exposed population here. Example: residents near roads, workers, commuters, children in nearby schools, etc.',
+        exposure_pattern: 'Describe exposure pattern here. Example: chronic exposure to traffic emissions/noise, construction phase exposure, episodic peak exposure, etc.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here. Example: epidemiological study, monitoring report, EIA/ESIA evidence, systematic review, guideline, etc.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for this type of project.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE: Strong / Moderate / Limited / Mixed / Scenario-dependent',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'hydraulic_projects',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe the hydraulic project context here. Example: dams, reservoirs, flood-control works, irrigation networks, water abstraction, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for hydraulic projects.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'port_projects',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe the port project context here. Example: port expansion, dredging, cargo handling, cruise terminal, ship emissions, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for port projects.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'environmental_infrastructure',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe the environmental infrastructure context here. Example: wastewater treatment, waste management, landfills, recycling facilities, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for environmental infrastructure systems.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'extractive_activities',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe extractive activity context here. Example: quarrying, mining, drilling, mineral processing, dust emissions, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for extractive activities.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'tourism_urban_sport_leisure',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe context here. Example: hotels, urban development, large buildings, stadiums, leisure facilities, tourism complexes, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for tourism, urban, building, sport or leisure projects.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'poultry_farms',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe poultry farm context here. Example: intensive poultry production, manure management, bioaerosols, odor, antimicrobial resistance concerns, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for poultry farms.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'aquaculture',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe aquaculture context here. Example: fish farms, coastal installations, feed use, antibiotics, water quality effects, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for aquaculture.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'processing_industrial',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe processing/industrial context here. Example: manufacturing, chemical processing, food processing, emissions, occupational exposure, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for processing, industrial and related facilities.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'renewable_energy',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe renewable energy context here. Example: wind farms, solar parks, biomass, geothermal, battery systems, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for renewable energy projects.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'energy_fuel_chemical_transport',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe energy/fuel/chemical transport context here. Example: pipelines, fuel storage transfer, chemical transport corridors, transmission lines, etc.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for transport of energy, fuel and chemicals.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'special_projects',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe special project context here. Example: antenna parks, storage/distribution of construction materials, or other special activities.',
+        population: 'Describe the exposed population here.',
+        exposure_pattern: 'Describe exposure pattern here.',
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for special projects and activities.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      }
+    ];
+
+    const categories = [
+      { key: 'land_air_transport', label: 'Land and air transport projects' },
+      { key: 'hydraulic_projects', label: 'Hydraulic projects' },
+      { key: 'port_projects', label: 'Port projects' },
+      { key: 'environmental_infrastructure', label: 'Environmental infrastructure systems' },
+      { key: 'extractive_activities', label: 'Extractive activities' },
+      { key: 'tourism_urban_sport_leisure', label: 'Tourism facilities and urban development, building, sport and leisure projects' },
+      { key: 'poultry_farms', label: 'Poultry farms' },
+      { key: 'aquaculture', label: 'Aquaculture' },
+      { key: 'processing_industrial', label: 'Processing, industrial and related facilities' },
+      { key: 'renewable_energy', label: 'Renewable energy sources' },
+      { key: 'energy_fuel_chemical_transport', label: 'Transport of energy, fuel and chemicals' },
+      { key: 'special_projects', label: 'Special projects and activities' }
+    ];
+
+    const likelihoodInput = document.getElementById('likelihood');
+    const likelihoodValue = document.getElementById('likelihoodValue');
+    const calculateBtn = document.getElementById('calculateBtn');
+
+    const likelihoodClassEl = document.getElementById('likelihoodClass');
+    const classicalRiskEl = document.getElementById('classicalRisk');
+    const harmPotentialEl = document.getElementById('harmPotential');
+    const ethicalLoadEl = document.getElementById('ethicalLoad');
+    const ethicosomeEl = document.getElementById('ethicosome');
+    const flagsEl = document.getElementById('flags');
+    const warningArea = document.getElementById('warningArea');
+    const gaugeFill = document.getElementById('gaugeFill');
+    const explanationEl = document.getElementById('explanation');
+    const dataStatus = document.getElementById('dataStatus');
+
+    likelihoodInput.addEventListener('input', () => {
+      likelihoodValue.textContent = likelihoodInput.value;
+      renderResults();
+    });
+
+    function classifyLikelihood(percent) {
+      if (percent < 10) return { label: 'Rare', index: 0 };
+      if (percent < 35) return { label: 'Unlikely', index: 1 };
+      if (percent < 65) return { label: 'Possible', index: 2 };
+      if (percent < 90) return { label: 'Likely', index: 3 };
+      return { label: 'Almost certain', index: 4 };
+    }
+
+    function guidanceToSuggestedValue(guidance) {
+      const normalized = String(guidance || '').trim().toLowerCase();
+      const map = {
+        'rare': 5,
+        'unlikely': 20,
+        'possible': 50,
+        'likely': 75,
+        'almost certain': 95,
+        'unlikely–possible': 35,
+        'unlikely-possible': 35,
+        'possible–likely': 65,
+        'possible-likely': 65
+      };
+      return map[normalized] ?? 50;
+    }
+
+    const consequenceMeta = {
+      negligible: { label: 'Negligible', row: 0, harm: 0, catastrophic: false },
+      minor: { label: 'Minor', row: 1, harm: 0, catastrophic: false },
+      moderate: { label: 'Moderate', row: 2, harm: 1, catastrophic: false },
+      major: { label: 'Major', row: 3, harm: 2, catastrophic: false },
+      catastrophic: { label: 'Catastrophic', row: 4, harm: 2, catastrophic: true }
+    };
+
+    const riskMatrix = [
+      ['Low', 'Low', 'Medium', 'Medium', 'Significant'],
+      ['Low', 'Medium', 'Medium', 'Significant', 'High'],
+      ['Medium', 'Medium', 'Significant', 'High', 'High'],
+      ['Medium', 'Significant', 'High', 'High', 'Critical'],
+      ['Significant', 'High', 'High', 'Critical', 'Critical']
+    ];
+
+    function getClassicalRisk(consequenceKey, percent) {
+      const likelihood = classifyLikelihood(percent);
+      const meta = consequenceMeta[consequenceKey];
+      return riskMatrix[meta.row][likelihood.index];
+    }
+
+    function getHarmPotential(consequenceKey, vulnerabilityStatus) {
+      if (vulnerabilityStatus === 'exposed') return { label: 'High', value: 2 };
+      const harmValue = consequenceMeta[consequenceKey].harm;
+      if (harmValue === 0) return { label: 'Low', value: 0 };
+      if (harmValue === 1) return { label: 'Moderate', value: 1 };
+      return { label: 'High', value: 2 };
+    }
+
+    function getEthicalLoad(harmValue, score) {
+      if (harmValue === 0 && score === 0) return { label: 'None', value: 0 };
+      if ((harmValue === 1 && score === 0) || (harmValue === 0 && score === 1)) return { label: 'Moderate', value: 1 };
+      return { label: 'High', value: 2 };
+    }
+
+    const levels = ['Low', 'Medium', 'Significant', 'High', 'Critical'];
+
+    function escalateRisk(classicalRisk, ethicalLoadValue) {
+      const idx = levels.indexOf(classicalRisk);
+      if (idx === -1) return classicalRisk;
+      return levels[Math.min(idx + ethicalLoadValue, levels.length - 1)];
+    }
+
+    function applyHardRules(context) {
+      const { preliminaryEthicosome, vulnerabilityStatus, ethicalInputCount, consequenceKey } = context;
+      const isCatastrophic = consequenceMeta[consequenceKey].catastrophic;
+
+      if (isCatastrophic && vulnerabilityStatus === 'exposed') {
+        return {
+          triggered: true,
+          finalEthicosome: 'Critical',
+          messages: ['Hard rule applied: catastrophic realistic outcome combined with vulnerable population exposure leads directly to Critical ethicosome.']
+        };
+      }
+
+      if (ethicalInputCount >= 3 && ['Low', 'Medium', 'Significant'].includes(preliminaryEthicosome)) {
+        return {
+          triggered: true,
+          finalEthicosome: 'High',
+          messages: ['Hard rule applied: three or more ethical concerns set a minimum ethicosome level of High.']
+        };
+      }
+
+      return { triggered: false, finalEthicosome: null, messages: [] };
+    }
+
+    function addFlag(text, kind = '') {
+      const span = document.createElement('span');
+      span.className = 'pill ' + kind;
+      span.textContent = text;
+      return span;
+    }
+
+    function updateGauge(level) {
+      const positions = { Low: 5, Medium: 25, Significant: 50, High: 75, Critical: 95 };
+      gaugeFill.style.left = (positions[level] || 0) + '%';
+    }
+
+    function renderExplanation(data) {
+      explanationEl.innerHTML = `
+        <div class="step">
+          <strong>Step 1 — Classical Risk</strong><br>
+          Consequence: ${data.consequenceLabel}<br>
+          Likelihood: ${data.likelihoodLabel} (${data.percent}%)<br>
+          Classical risk: <strong>${data.classicalRisk}</strong>
+        </div>
+        <div class="step">
+          <strong>Step 2 — Ethical Evaluation</strong><br>
+          Vulnerability status: ${data.vulnerabilityLabel}<br>
+          Involuntariness: ${data.involuntariness ? 'Present' : 'Absent'}<br>
+          Inequality: ${data.inequality ? 'Present' : 'Absent'}<br>
+          Beneficence: ${data.beneficence ? 'Unfavorable' : 'Favorable'}<br>
+          Uncertainty: ${data.uncertainty ? 'Present' : 'Absent'}<br>
+          Derived harm potential: <strong>${data.harmLabel}</strong><br>
+          Ethical load: <strong>${data.ethicalLoadLabel}</strong>
+        </div>
+        <div class="step">
+          <strong>Step 3 — Final Ethicosome</strong><br>
+          Preliminary ethicosome after capped escalation: <strong>${data.preliminaryEthicosome}</strong><br>
+          Hard rule triggered: ${data.hardRuleTriggered ? 'Yes' : 'No'}<br>
+          Final ethicosome: <strong>${data.finalEthicosome}</strong>
+        </div>
+      `;
+    }
+
+    function renderResults() {
+      const consequenceKey = document.getElementById('consequence').value;
+      const consequenceLabel = consequenceMeta[consequenceKey].label;
+      const percent = Number(likelihoodInput.value);
+      const likelihoodClass = classifyLikelihood(percent);
+      const vulnerabilityStatus = document.querySelector('input[name="vulnerability"]:checked').value;
+
+      const involuntariness = document.getElementById('involuntariness').checked ? 1 : 0;
+      const inequality = document.getElementById('inequality').checked ? 1 : 0;
+      const beneficence = document.getElementById('beneficence').checked ? 1 : 0;
+      const uncertainty = document.getElementById('uncertainty').checked ? 1 : 0;
+
+      const ethicalScore = involuntariness + inequality + beneficence + uncertainty;
+      const classicalRisk = getClassicalRisk(consequenceKey, percent);
+      const harm = getHarmPotential(consequenceKey, vulnerabilityStatus);
+      const ethicalLoad = getEthicalLoad(harm.value, ethicalScore);
+      const preliminaryEthicosome = escalateRisk(classicalRisk, ethicalLoad.value);
+      const hardRuleResult = applyHardRules({ preliminaryEthicosome, vulnerabilityStatus, ethicalInputCount: ethicalScore, consequenceKey });
+      const finalEthicosome = hardRuleResult.triggered ? hardRuleResult.finalEthicosome : preliminaryEthicosome;
+
+      likelihoodClassEl.textContent = `${likelihoodClass.label} (${percent}%)`;
+      classicalRiskEl.textContent = `${classicalRisk} (${consequenceLabel})`;
+      harmPotentialEl.textContent = harm.label;
+      ethicalLoadEl.textContent = ethicalLoad.label;
+      ethicosomeEl.textContent = finalEthicosome;
+      updateGauge(finalEthicosome);
+
+      const vulnerabilityLabelMap = {
+        exposed: 'Vulnerable population realistically exposed',
+        not_exposed: 'No vulnerable population realistically exposed',
+        bypass: 'Bypass / user-defined exclusion'
+      };
+
+      renderExplanation({
+        consequenceLabel,
+        likelihoodLabel: likelihoodClass.label,
+        percent,
+        classicalRisk,
+        vulnerabilityLabel: vulnerabilityLabelMap[vulnerabilityStatus],
+        involuntariness,
+        inequality,
+        beneficence,
+        uncertainty,
+        harmLabel: harm.label,
+        ethicalLoadLabel: ethicalLoad.label,
+        preliminaryEthicosome,
+        hardRuleTriggered: hardRuleResult.triggered,
+        finalEthicosome
+      });
+
+      flagsEl.innerHTML = '';
+      warningArea.innerHTML = '';
+
+      if (vulnerabilityStatus === 'exposed') flagsEl.appendChild(addFlag('Vulnerable population exposed', 'danger'));
+      if (vulnerabilityStatus === 'not_exposed') flagsEl.appendChild(addFlag('No vulnerable population realistically exposed', 'ok'));
+      if (vulnerabilityStatus === 'bypass') flagsEl.appendChild(addFlag('Vulnerability bypass applied', 'warn'));
+      if (involuntariness) flagsEl.appendChild(addFlag('Involuntariness present', 'warn'));
+      if (inequality) flagsEl.appendChild(addFlag('Inequality present', 'warn'));
+      if (beneficence) flagsEl.appendChild(addFlag('Unfavorable beneficence', 'warn'));
+      if (uncertainty) flagsEl.appendChild(addFlag('Uncertainty present', 'warn'));
+      if (!flagsEl.children.length) flagsEl.textContent = 'No active flags';
+
+      if (vulnerabilityStatus === 'bypass') {
+        const warning = document.createElement('div');
+        warning.className = 'warning';
+        warning.textContent = 'Results may underestimate ethical risk due to user-defined exclusion of vulnerable populations.';
+        warningArea.appendChild(warning);
+      }
+
+      if (hardRuleResult.triggered) {
+        hardRuleResult.messages.forEach((message) => {
+          const box = document.createElement('div');
+          box.className = 'danger-box';
+          box.textContent = message;
+          warningArea.appendChild(box);
+        });
+      }
+    }
+
+    function renderSources(sources) {
+      if (!sources || !sources.length) return 'No sources added yet.';
+      return `<ul style="margin: 0; padding-left: 18px;">${sources.map(source => {
+        const isPlaceholder = !source.url || source.url === '#' || source.url.includes('ADD SOURCE URL');
+        if (isPlaceholder) return `<li>${source.title || 'Untitled source'}</li>`;
+        return `<li><a href="${source.url}" target="_blank" rel="noopener noreferrer">${source.title || source.url}</a></li>`;
+      }).join('')}</ul>`;
+    }
+
+    function renderTabs(activeCategory) {
+      const tabs = document.getElementById('caseTabs');
+      tabs.innerHTML = '';
+      categories.forEach(cat => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'tab-button' + (cat.key === activeCategory ? ' active' : '');
+        button.textContent = cat.label;
+        button.addEventListener('click', () => {
+          currentCategory = cat.key;
+          document.getElementById('caseCategory').value = cat.key;
+          renderCaseCards();
+        });
+        tabs.appendChild(button);
+      });
+    }
+
+    function normalizeCase(c) {
+      return {
+        id: c.id,
+        category: c.category,
+        topic: c.topic || '',
+        title: c.title || 'Untitled case',
+        context: c.context || '',
+        population: c.population || '',
+        exposure_pattern: c.exposure_pattern || c.exposurePattern || '',
+        outcome: c.outcome || '',
+        evidence_type: c.evidence_type || c.evidenceType || '',
+        likelihood_guidance: c.likelihood_guidance || c.likelihoodGuidance || 'Possible',
+        interpretation: c.interpretation || '',
+        evidence_strength: c.evidence_strength || c.evidenceStrength || '',
+        sources: c.sources || []
+      };
+    }
+
+    function caseMatchesSearch(c, query) {
+      if (!query) return true;
+      const text = [c.title, c.topic, c.context, c.population, c.exposure_pattern, c.outcome, c.evidence_type, c.evidence_strength, c.interpretation]
+        .join(' ')
+        .toLowerCase();
+      return text.includes(query.toLowerCase());
+    }
+
+    function renderCaseCards() {
+      renderTabs(currentCategory);
+      const container = document.getElementById('caseCards');
+      container.innerHTML = '';
+
+      const filtered = caseStudies
+        .map(normalizeCase)
+        .filter(c => c.category === currentCategory)
+        .filter(c => caseMatchesSearch(c, currentSearch));
+
+      if (!filtered.length) {
+        container.innerHTML = '<p class="muted">No case studies available for this category/search yet.</p>';
+        return;
+      }
+
+      filtered.forEach(c => {
+        const suggestedValue = guidanceToSuggestedValue(c.likelihood_guidance);
+        const card = document.createElement('div');
+        card.className = 'case-card';
+        card.innerHTML = `
+          <h3>${c.title}</h3>
+          <span class="pill blue">${c.topic || 'Topic not specified'}</span>
+          <span class="pill warn">Likelihood guidance: ${c.likelihood_guidance}</span>
+          <dl>
+            <dt>Context</dt><dd>${c.context || 'Not specified'}</dd>
+            <dt>Population</dt><dd>${c.population || 'Not specified'}</dd>
+            <dt>Exposure pattern</dt><dd>${c.exposure_pattern || 'Not specified'}</dd>
+            <dt>Outcome</dt><dd>${c.outcome || 'Not specified'}</dd>
+            <dt>Evidence type</dt><dd>${c.evidence_type || 'Not specified'}</dd>
+            <dt>Interpretation</dt><dd>${c.interpretation || 'Not specified'}</dd>
+            <dt>Evidence strength</dt><dd>${c.evidence_strength || 'Not specified'}</dd>
+            <dt>Evidence sources</dt><dd>${renderSources(c.sources)}</dd>
+          </dl>
+          <div class="case-actions">
+            <button type="button" onclick="applyLikelihoodValue(${suggestedValue})">Use suggested value (${suggestedValue}%)</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function loadCasesFromSupabase() {
+      if (!supabaseClient) {
+        dataStatus.textContent = 'Data source: local fallback templates';
+        dataStatus.className = 'pill warn';
+        caseStudies = fallbackCaseStudies;
+        renderCaseCards();
+        return;
+      }
+
+      dataStatus.textContent = 'Data source: loading from Supabase...';
+      dataStatus.className = 'pill blue';
+
+      const { data, error } = await supabaseClient
+        .from('cases')
+        .select(`
+          id,
+          category,
+          topic,
+          title,
+          context,
+          population,
+          exposure_pattern,
+          outcome,
+          evidence_type,
+          evidence_strength,
+          likelihood_guidance,
+          interpretation,
+          sources (
+            id,
+            title,
+            url
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        dataStatus.textContent = 'Data source: Supabase error; using fallback';
+        dataStatus.className = 'pill danger';
+        caseStudies = fallbackCaseStudies;
+        renderCaseCards();
+        return;
+      }
+
+      caseStudies = data || [];
+      dataStatus.textContent = `Data source: Supabase (${caseStudies.length} cases loaded)`;
+      dataStatus.className = 'pill ok';
+      renderCaseCards();
+    }
+
+    function applyLikelihoodValue(value) {
+      likelihoodInput.value = value;
+      likelihoodValue.textContent = value;
+      renderResults();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('caseCategory').addEventListener('change', (e) => {
+      currentCategory = e.target.value;
+      renderCaseCards();
+    });
+
+    document.getElementById('caseSearch').addEventListener('input', (e) => {
+      currentSearch = e.target.value;
+      renderCaseCards();
+    });
+
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('change', renderResults);
+    });
+
+    calculateBtn.addEventListener('click', renderResults);
+    renderResults();
+    loadCasesFromSupabase();
+  </script>
+</body>
+</html>
