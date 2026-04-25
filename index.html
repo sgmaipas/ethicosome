@@ -1080,7 +1080,8 @@
       explanationEl.innerHTML = `
         <div class="step">
           <strong>Project</strong><br>
-          Project name: <strong>${data.projectName || 'Not specified'}</strong>
+          Project name: <strong>${data.projectName || 'Not specified'}</strong><br>
+          Project category: <strong>${data.projectCategory || document.getElementById('caseCategory')?.selectedOptions?.[0]?.textContent || 'Not specified'}</strong>
         </div>
         <div class="step">
           <strong>Step 1 — Classical Risk</strong><br>
@@ -1529,7 +1530,10 @@
 
         addText('Ethicosome Report', 18, 'bold', 9);
         addText(`Final Ethicosome Risk Index: ${a.finalEthicosome}`, 12, 'bold', 7);
-        addField('Project name', a.project
+        addField('Project name', a.projectName || 'Not specified');
+      addField('Project category', a.projectCategory || document.getElementById('caseCategory')?.selectedOptions?.[0]?.textContent || 'Not specified');
+      addField('Project category', a.projectCategory || 'Not specified');
+      addField('Generated on', a.date);
 
         addSection('1. Classical Risk Assessment');
         addField('Consequence', a.consequenceLabel);
