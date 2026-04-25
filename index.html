@@ -457,13 +457,24 @@
 </head>
 <body>
   <div class="container">
-    <div class="hero">
-      <h1>Ethicosome v1</h1>
-      <p class="muted">Environmental and ethical risk evaluation tool integrating classical risk assessment, bioethical modifiers, and evidence-supported likelihood guidance.</p>
-      <span class="pill blue">Research tool</span>
-      <span class="pill blue">Environmental Health</span>
-      <span class="pill blue">Ethical Risk Evaluation</span>
-    </div>
+    <div style="display:flex; gap:20px; align-items:stretch; margin-bottom:20px;">
+
+  <!-- LOGO BOX -->
+  <div class="card" style="display:flex; align-items:center; justify-content:center; width:140px;">
+    <img src="ethicosome-logo.png" style="width:140px;">
+  </div>
+
+  <!-- EXISTING HERO -->
+  <div class="card hero" style="flex:1;">
+    <h1>Ethicosome v1</h1>
+    <p class="muted">Environmental and ethical risk evaluation tool integrating classical risk assessment, bioethical modifiers, and evidence-supported likelihood guidance.</p>
+
+    <span class="pill blue">Research tool</span>
+    <span class="pill blue">Environmental Health</span>
+    <span class="pill blue">Ethical Risk Evaluation</span>
+  </div>
+
+</div>
 
     <div class="grid">
       <div>
@@ -1500,7 +1511,7 @@
       const maxWidth = pageWidth - margin * 2;
       let y = 18;
 
-      function addText(text, size = 10, style = 'normal', spacing = 6) {
+      function addText(text, size = 10, style = 'normal', spacing = 12) {
         doc.setFont('helvetica', style);
         doc.setFontSize(size);
         const lines = doc.splitTextToSize(String(text || ''), maxWidth);
@@ -1509,7 +1520,7 @@
             doc.addPage();
             y = 18;
           }
-          doc.text(line, margin, y);
+          doc.text(line, margin, y+3);
           y += spacing;
         });
       }
@@ -1517,8 +1528,10 @@
       function addSection(title) {
         y += 3;
         addText(title, 11, 'bold', 7);
+        y +1;
         doc.setDrawColor(209, 213, 219);
-        doc.line(margin, y - 4, pageWidth - margin, y - 4);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 3;
       }
 
       function addField(label, value) {
@@ -1568,7 +1581,7 @@
         y += 3;
         doc.setDrawColor(209, 213, 219);
         doc.line(margin, y, pageWidth - margin, y);
-        y += 7;
+        y += 3;
         addText('© 2026 Sotirios G. Maipas. All rights reserved.', 9, 'normal', 5);
         addText('This tool is intended for educational and research purposes only and does not replace formal risk assessment.', 9, 'normal', 5);
         addText('Developed as part of a postdoctoral research project at the Department of Nursing, University of the Peloponnese, Greece, under the supervision of Associate Professor Fotini Tzavella.', 9, 'normal', 5);
@@ -1586,7 +1599,7 @@
       function addLogoAndReport() {
         const logo = new Image();
         logo.crossOrigin = 'anonymous';
-        logo.src = 'ethicosome-logo-n-t.png';
+        logo.src = 'ethicosome-logo.png';
 
         logo.onload = function () {
           const logoWidth = 32;
