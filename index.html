@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ethicosome v1 — Research Tool</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -357,6 +358,56 @@
       font-size: 13px;
     }
 
+    .report-template {
+      display: none;
+      background: #ffffff;
+      color: #111827;
+      padding: 32px;
+      max-width: 820px;
+      font-family: Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    .report-template h1 {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .report-template h2 {
+      font-size: 17px;
+      margin-top: 22px;
+      border-bottom: 1px solid #d1d5db;
+      padding-bottom: 6px;
+    }
+
+    .report-template p,
+    .report-template li {
+      font-size: 13px;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .report-item {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px;
+      background: #f9fafb;
+      font-size: 13px;
+    }
+
+    .report-footer {
+      margin-top: 28px;
+      border-top: 1px solid #d1d5db;
+      padding-top: 12px;
+      color: #4b5563;
+      font-size: 11px;
+    }
+
     .status-row {
       display: flex;
       flex-wrap: wrap;
@@ -382,6 +433,16 @@
 
     <div class="grid">
       <div>
+        <div class="card">
+          <div class="section-title">
+            <h2>Project Information</h2>
+          </div>
+
+          <label for="projectName">Project name</label>
+          <input type="text" id="projectName" placeholder="Enter the name of the project or activity being evaluated..." />
+          <p class="small muted">This name will be used in the on-screen assessment and future PDF report.</p>
+        </div>
+
         <div class="card">
           <div class="section-title">
             <h2>Part I — Classical Risk</h2>
@@ -483,6 +544,7 @@
 
           <div class="result-box">
             <h3>Ethicosome Risk Index</h3>
+            <p class="small muted">Ethical and Environmental Risk Level</p>
             <div class="gauge">
               <div id="gaugeFill"></div>
             </div>
@@ -504,6 +566,8 @@
             <h3>Flags</h3>
             <div id="flags">—</div>
           </div>
+
+          <button id="generatePdfBtn" type="button" class="secondary-button">Generate PDF Report</button>
 
           <div id="warningArea"></div>
         </div>
@@ -569,6 +633,8 @@
         Developed as part of a postdoctoral research project at the Department of Nursing, University of the Peloponnese, Greece, under the supervision of Associate Professor Fotini Tzavella.
       </p>
     </footer>
+
+    <div id="pdfReport" class="report-template"></div>
   </div>
 
   <script>
@@ -795,6 +861,7 @@
     const likelihoodInput = document.getElementById('likelihood');
     const likelihoodValue = document.getElementById('likelihoodValue');
     const calculateBtn = document.getElementById('calculateBtn');
+    const projectNameInput = document.getElementById('projectName');
 
     const likelihoodClassEl = document.getElementById('likelihoodClass');
     const classicalRiskEl = document.getElementById('classicalRisk');
@@ -806,6 +873,10 @@
     const gaugeFill = document.getElementById('gaugeFill');
     const explanationEl = document.getElementById('explanation');
     const dataStatus = document.getElementById('dataStatus');
+    const generatePdfBtn = document.getElementById('generatePdfBtn');
+    const pdfReport = document.getElementById('pdfReport');
+
+    let latestAssessment = null;
 
     likelihoodInput.addEventListener('input', () => {
       likelihoodValue.textContent = likelihoodInput.value;
@@ -918,6 +989,10 @@
     function renderExplanation(data) {
       explanationEl.innerHTML = `
         <div class="step">
+          <strong>Project</strong><br>
+          Project name: <strong>${data.projectName || 'Not specified'}</strong>
+        </div>
+        <div class="step">
           <strong>Step 1 — Classical Risk</strong><br>
           Consequence: ${data.consequenceLabel}<br>
           Likelihood: ${data.likelihoodLabel} (${data.percent}%)<br>
@@ -943,6 +1018,7 @@
     }
 
     function renderResults() {
+      const projectName = projectNameInput.value.trim();
       const consequenceKey = document.getElementById('consequence').value;
       const consequenceLabel = consequenceMeta[consequenceKey].label;
       const percent = Number(likelihoodInput.value);
@@ -975,7 +1051,9 @@
         bypass: 'Bypass / user-defined exclusion'
       };
 
-      renderExplanation({
+      latestAssessment = {
+        projectName,
+        date: new Date().toLocaleString(),
         consequenceLabel,
         likelihoodLabel: likelihoodClass.label,
         percent,
@@ -989,8 +1067,11 @@
         ethicalLoadLabel: ethicalLoad.label,
         preliminaryEthicosome,
         hardRuleTriggered: hardRuleResult.triggered,
+        hardRuleMessages: hardRuleResult.messages,
         finalEthicosome
-      });
+      };
+
+      renderExplanation(latestAssessment);
 
       flagsEl.innerHTML = '';
       warningArea.innerHTML = '';
@@ -1160,6 +1241,78 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function yesNo(value) {
+      return value ? 'Present' : 'Absent';
+    }
+
+    function buildPdfReport() {
+      renderResults();
+      const a = latestAssessment;
+      if (!a) return;
+
+      const hardRuleText = a.hardRuleTriggered
+        ? a.hardRuleMessages.map(m => `<li>${m}</li>`).join('')
+        : '<li>No hard rule was triggered.</li>';
+
+      pdfReport.innerHTML = `
+        <h1>Ethicosome Report</h1>
+        <p><strong>Ethicosome Risk Index:</strong> ${a.finalEthicosome}</p>
+        <p><strong>Project name:</strong> ${a.projectName || 'Not specified'}</p>
+        <p><strong>Generated on:</strong> ${a.date}</p>
+
+        <h2>1. Classical Risk Assessment</h2>
+        <div class="report-grid">
+          <div class="report-item"><strong>Consequence</strong><br>${a.consequenceLabel}</div>
+          <div class="report-item"><strong>Likelihood</strong><br>${a.likelihoodLabel} (${a.percent}%)</div>
+          <div class="report-item"><strong>Classical risk</strong><br>${a.classicalRisk}</div>
+          <div class="report-item"><strong>Derived harm potential</strong><br>${a.harmLabel}</div>
+        </div>
+
+        <h2>2. Ethical Evaluation</h2>
+        <div class="report-grid">
+          <div class="report-item"><strong>Vulnerability status</strong><br>${a.vulnerabilityLabel}</div>
+          <div class="report-item"><strong>Involuntariness</strong><br>${yesNo(a.involuntariness)}</div>
+          <div class="report-item"><strong>Inequality</strong><br>${yesNo(a.inequality)}</div>
+          <div class="report-item"><strong>Beneficence</strong><br>${a.beneficence ? 'Unfavorable' : 'Favorable'}</div>
+          <div class="report-item"><strong>Uncertainty</strong><br>${yesNo(a.uncertainty)}</div>
+          <div class="report-item"><strong>Ethical load</strong><br>${a.ethicalLoadLabel}</div>
+        </div>
+
+        <h2>3. Final Result</h2>
+        <p>Preliminary ethicosome after capped escalation: <strong>${a.preliminaryEthicosome}</strong></p>
+        <p>Final Ethicosome Risk Index: <strong>${a.finalEthicosome}</strong></p>
+        <p>Hard rules:</p>
+        <ul>${hardRuleText}</ul>
+
+        <h2>4. Methodological Note</h2>
+        <p>This report summarizes the inputs and outputs generated by the Ethicosome tool. The result should be interpreted as a structured decision-support output, not as a substitute for formal risk assessment or regulatory evaluation.</p>
+
+        <div class="report-footer">
+          <p>© 2026 Sotirios G. Maipas. All rights reserved.</p>
+          <p>This tool is intended for educational and research purposes only and does not replace formal risk assessment.</p>
+          <p>Developed as part of a postdoctoral research project at the Department of Nursing, University of the Peloponnese, Greece, under the supervision of Associate Professor Fotini Tzavella.</p>
+        </div>
+      `;
+    }
+
+    function generatePdfReport() {
+      buildPdfReport();
+      const projectName = (latestAssessment?.projectName || 'ethicosome-report')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || 'ethicosome-report';
+
+      const options = {
+        margin: 10,
+        filename: `${projectName}-ethicosome-report.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(options).from(pdfReport).save();
+    }
+
     document.getElementById('caseCategory').addEventListener('change', (e) => {
       currentCategory = e.target.value;
       renderCaseCards();
@@ -1174,7 +1327,9 @@
       el.addEventListener('change', renderResults);
     });
 
+    projectNameInput.addEventListener('input', renderResults);
     calculateBtn.addEventListener('click', renderResults);
+    generatePdfBtn.addEventListener('click', generatePdfReport);
     renderResults();
     loadCasesFromSupabase();
   </script>
