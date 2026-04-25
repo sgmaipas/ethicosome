@@ -1063,7 +1063,7 @@
 
       latestAssessment = {
         projectName,
-        date: new Date().toLocaleString(),
+        date: new Date().toISOString().slice(0, 19).replace('T', ' '),
         consequenceLabel,
         likelihoodLabel: likelihoodClass.label,
         percent,
