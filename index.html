@@ -99,6 +99,30 @@
       margin-top: 8px;
     }
 
+    .optional-module {
+      margin-top: 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fbfdff;
+      overflow: hidden;
+    }
+
+    .optional-module summary {
+      cursor: pointer;
+      padding: 14px;
+      font-weight: 700;
+      background: #f9fafb;
+    }
+
+    .optional-module-content {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .hidden {
+      display: none;
+    }
+
     .option {
       display: flex;
       gap: 10px;
@@ -514,6 +538,49 @@
               <span><strong>Uncertainty present</strong><br><span class="small muted">Evidence is limited, conflicting, or insufficient.</span></span>
             </label>
           </div>
+          <details class="optional-module">
+            <summary>Part III — One Health Considerations (Optional)</summary>
+            <div class="optional-module-content">
+              <label class="option">
+                <input type="checkbox" id="includeOneHealth" />
+                <span><strong>Include One Health assessment</strong><br><span class="small muted">Use this optional module when animals, ecosystems, or human–animal–environment interactions may be relevant.</span></span>
+              </label>
+
+              <div id="oneHealthInputs" class="hidden">
+                <label>1. Is there any potential One Health relevance?</label>
+                <div class="radio-group">
+                  <label class="option"><input type="radio" name="oneHealthRelevance" value="no" checked /> No</label>
+                  <label class="option"><input type="radio" name="oneHealthRelevance" value="yes" /> Yes</label>
+                </div>
+
+                <div id="oneHealthFollowUp" class="hidden">
+                  <label for="oneHealthDomain">2. Primary domain of concern</label>
+                  <select id="oneHealthDomain">
+                    <option value="animals">Animals</option>
+                    <option value="ecosystems">Ecosystems</option>
+                    <option value="human_animal_interface">Human–animal interface (zoonoses, vectors, AMR, food chain)</option>
+                    <option value="multiple">Multiple</option>
+                  </select>
+
+                  <div id="animalWelfareBlock">
+                    <label>3. Could the project affect animal health or welfare?</label>
+                    <div class="radio-group">
+                      <label class="option"><input type="radio" name="animalWelfare" value="no" checked /> No</label>
+                      <label class="option"><input type="radio" name="animalWelfare" value="yes" /> Yes</label>
+                    </div>
+                  </div>
+
+                  <label for="oneHealthImpact">4. Estimated level of One Health impact</label>
+                  <select id="oneHealthImpact">
+                    <option value="low">Low</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </details>
+
           <div style="margin-top: 12px; padding: 8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px;">
             <p class="small muted" style="margin: 0; font-weight: 700;">
               Results update automatically based on your inputs.
@@ -572,6 +639,11 @@
           <div class="result-box">
             <h3>How was this result calculated?</h3>
             <div id="explanation" class="explanation-panel">—</div>
+          </div>
+
+          <div class="result-box">
+            <h3>One Health Relevance</h3>
+            <p id="oneHealthResult">Not assessed</p>
           </div>
 
           <div class="result-box">
@@ -880,12 +952,19 @@
     const ethicalLoadEl = document.getElementById('ethicalLoad');
     const ethicosomeEl = document.getElementById('ethicosome');
     const flagsEl = document.getElementById('flags');
+    const oneHealthResultEl = document.getElementById('oneHealthResult');
     const warningArea = document.getElementById('warningArea');
     const gaugeFill = document.getElementById('gaugeFill');
     const explanationEl = document.getElementById('explanation');
     const dataStatus = document.getElementById('dataStatus');
     const generatePdfBtn = document.getElementById('generatePdfBtn');
     const pdfReport = document.getElementById('pdfReport');
+    const includeOneHealthInput = document.getElementById('includeOneHealth');
+    const oneHealthInputs = document.getElementById('oneHealthInputs');
+    const oneHealthFollowUp = document.getElementById('oneHealthFollowUp');
+    const oneHealthDomainInput = document.getElementById('oneHealthDomain');
+    const animalWelfareBlock = document.getElementById('animalWelfareBlock');
+    const oneHealthImpactInput = document.getElementById('oneHealthImpact');
 
     let latestAssessment = null;
 
@@ -1028,6 +1107,79 @@
       `;
     }
 
+    function getOneHealthAssessment() {
+      const included = includeOneHealthInput.checked;
+      if (!included) {
+        return {
+          included: false,
+          relevance: 'Not assessed',
+          domain: 'Not applicable',
+          animalWelfare: 'Not applicable',
+          impact: 'Not applicable',
+          flags: []
+        };
+      }
+
+      const relevanceValue = document.querySelector('input[name="oneHealthRelevance"]:checked')?.value || 'no';
+      if (relevanceValue === 'no') {
+        return {
+          included: true,
+          relevance: 'None identified',
+          domain: 'Not applicable',
+          animalWelfare: 'Not applicable',
+          impact: 'Not applicable',
+          flags: ['One Health module completed: no One Health relevance identified.']
+        };
+      }
+
+      const domain = oneHealthDomainInput.value;
+      const impact = oneHealthImpactInput.value;
+      const animalWelfare = document.querySelector('input[name="animalWelfare"]:checked')?.value || 'no';
+
+      const domainLabels = {
+        animals: 'Animals',
+        ecosystems: 'Ecosystems',
+        human_animal_interface: 'Human–animal interface',
+        multiple: 'Multiple'
+      };
+
+      const impactLabels = {
+        low: 'Low',
+        moderate: 'Moderate',
+        high: 'High'
+      };
+
+      const flags = [];
+      flags.push(`One Health relevance identified: ${domainLabels[domain]}.`);
+      if (animalWelfare === 'yes' && (domain === 'animals' || domain === 'multiple')) {
+        flags.push('Animal health or welfare considerations identified.');
+      }
+      if (impact === 'high') {
+        flags.push('High One Health relevance: animal, ecosystem, or human–animal–environment impacts should be specifically assessed.');
+      }
+
+      return {
+        included: true,
+        relevance: impactLabels[impact],
+        domain: domainLabels[domain],
+        animalWelfare: animalWelfare === 'yes' ? 'Yes' : 'No',
+        impact: impactLabels[impact],
+        flags
+      };
+    }
+
+    function updateOneHealthVisibility() {
+      const included = includeOneHealthInput.checked;
+      oneHealthInputs.classList.toggle('hidden', !included);
+
+      const relevanceValue = document.querySelector('input[name="oneHealthRelevance"]:checked')?.value || 'no';
+      oneHealthFollowUp.classList.toggle('hidden', !included || relevanceValue === 'no');
+
+      const domain = oneHealthDomainInput.value;
+      const showAnimalWelfare = included && relevanceValue === 'yes' && (domain === 'animals' || domain === 'multiple');
+      animalWelfareBlock.classList.toggle('hidden', !showAnimalWelfare);
+    }
+
     function renderResults() {
       const projectName = projectNameInput.value.trim();
       const consequenceKey = document.getElementById('consequence').value;
@@ -1048,12 +1200,15 @@
       const preliminaryEthicosome = escalateRisk(classicalRisk, ethicalLoad.value);
       const hardRuleResult = applyHardRules({ preliminaryEthicosome, vulnerabilityStatus, ethicalInputCount: ethicalScore, consequenceKey });
       const finalEthicosome = hardRuleResult.triggered ? hardRuleResult.finalEthicosome : preliminaryEthicosome;
+      updateOneHealthVisibility();
+      const oneHealth = getOneHealthAssessment();
 
       likelihoodClassEl.textContent = `${likelihoodClass.label} (${percent}%)`;
       classicalRiskEl.textContent = `${classicalRisk} (${consequenceLabel})`;
       harmPotentialEl.textContent = harm.label;
       ethicalLoadEl.textContent = ethicalLoad.label;
       ethicosomeEl.textContent = finalEthicosome;
+      oneHealthResultEl.textContent = oneHealth.included ? `${oneHealth.relevance} (${oneHealth.domain})` : 'Not assessed';
       updateGauge(finalEthicosome);
 
       const vulnerabilityLabelMap = {
@@ -1079,7 +1234,8 @@
         preliminaryEthicosome,
         hardRuleTriggered: hardRuleResult.triggered,
         hardRuleMessages: hardRuleResult.messages,
-        finalEthicosome
+        finalEthicosome,
+        oneHealth
       };
 
       renderExplanation(latestAssessment);
@@ -1094,6 +1250,9 @@
       if (inequality) flagsEl.appendChild(addFlag('Inequality present', 'warn'));
       if (beneficence) flagsEl.appendChild(addFlag('Unfavorable beneficence', 'warn'));
       if (uncertainty) flagsEl.appendChild(addFlag('Uncertainty present', 'warn'));
+      if (oneHealth.flags.length) {
+        oneHealth.flags.forEach(flag => flagsEl.appendChild(makeFlag(flag, flag.includes('High') ? 'danger' : 'blue')));
+      }
       if (!flagsEl.children.length) flagsEl.textContent = 'No active flags';
 
       if (vulnerabilityStatus === 'bypass') {
@@ -1377,12 +1536,19 @@
         addField('Uncertainty', a.uncertainty ? 'Present' : 'Absent');
         addField('Ethical load', a.ethicalLoadLabel);
 
-        addSection('3. Final Result');
+        addSection('3. One Health Considerations');
+        addField('One Health module', a.oneHealth.included ? 'Included' : 'Not included');
+        addField('One Health relevance', a.oneHealth.relevance);
+        addField('Primary domain of concern', a.oneHealth.domain);
+        addField('Animal health or welfare concern', a.oneHealth.animalWelfare);
+        addField('Estimated One Health impact', a.oneHealth.impact);
+
+        addSection('4. Final Result');
         addField('Preliminary ethicosome after capped escalation', a.preliminaryEthicosome);
         addField('Final Ethicosome Risk Index', a.finalEthicosome);
         addField('Hard rules', hardRules);
 
-        addSection('4. Methodological Note');
+        addSection('5. Methodological Note');
         addText('This report summarizes the inputs and outputs generated by the Ethicosome tool. The result should be interpreted as a structured decision-support output, not as a substitute for formal risk assessment or regulatory evaluation.', 10, 'normal', 6);
 
         y += 6;
