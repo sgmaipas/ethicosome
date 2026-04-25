@@ -1516,13 +1516,13 @@
 
       function addSection(title) {
         y += 3;
-        addText(title, 12, 'bold', 7);
+        addText(title, 11, 'bold', 7);
         doc.setDrawColor(209, 213, 219);
         doc.line(margin, y - 4, pageWidth - margin, y - 4);
       }
 
       function addField(label, value) {
-        addText(`${label}: ${value || '-'}`, 10, 'normal', 6);
+        addText(`${label}: ${value || '-'}`, 10, 'normal', 4);
       }
 
       function writeReportContent() {
@@ -1530,8 +1530,8 @@
           ? a.hardRuleMessages.join('; ')
           : 'No hard rule was triggered.';
 
-        addText('Ethicosome Report', 12, 'bold', 9);
-        addText(`Final Ethicosome Risk Index: ${a.finalEthicosome}`, 12, 'bold', 7);
+        addText('Ethicosome Report', 11, 'bold', 9);
+        addText(`Final Ethicosome Risk Index: ${a.finalEthicosome}`, 11, 'bold', 7);
         addField('Project name', a.projectName || 'Not specified');
       addField('Project category', a.projectCategory || 'Not specified');
       addField('Generated on', a.date);
@@ -1568,7 +1568,7 @@
         y += 6;
         doc.setDrawColor(209, 213, 219);
         doc.line(margin, y, pageWidth - margin, y);
-        y += 7;
+        y += 3;
         addText('© 2026 Sotirios G. Maipas. All rights reserved.', 9, 'normal', 5);
         addText('This tool is intended for educational and research purposes only and does not replace formal risk assessment.', 9, 'normal', 5);
         addText('Developed as part of a postdoctoral research project at the Department of Nursing, University of the Peloponnese, Greece, under the supervision of Associate Professor Fotini Tzavella.', 9, 'normal', 5);
