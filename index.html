@@ -1251,7 +1251,7 @@
       if (beneficence) flagsEl.appendChild(addFlag('Unfavorable beneficence', 'warn'));
       if (uncertainty) flagsEl.appendChild(addFlag('Uncertainty present', 'warn'));
       if (oneHealth.flags.length) {
-        oneHealth.flags.forEach(flag => flagsEl.appendChild(makeFlag(flag, flag.includes('High') ? 'danger' : 'blue')));
+        oneHealth.flags.forEach(flag => flagsEl.appendChild(addFlag(flag, flag.includes('High') ? 'danger' : 'blue')));
       }
       if (!flagsEl.children.length) flagsEl.textContent = 'No active flags';
 
