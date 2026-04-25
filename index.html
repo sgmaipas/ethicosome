@@ -1219,6 +1219,7 @@
 
       latestAssessment = {
         projectName,
+        projectCategory: document.getElementById('caseCategory')?.selectedOptions?.[0]?.textContent || 'Not specified',
         date: new Date().toISOString().slice(0, 19).replace('T', ' '),
         consequenceLabel,
         likelihoodLabel: likelihoodClass.label,
@@ -1528,8 +1529,7 @@
 
         addText('Ethicosome Report', 18, 'bold', 9);
         addText(`Final Ethicosome Risk Index: ${a.finalEthicosome}`, 12, 'bold', 7);
-        addField('Project name', a.projectName || 'Not specified');
-        addField('Generated on', a.date);
+        addField('Project name', a.project
 
         addSection('1. Classical Risk Assessment');
         addField('Consequence', a.consequenceLabel);
