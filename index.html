@@ -1308,7 +1308,15 @@
     function generatePdfReport() {
       renderResults();
       const a = latestAssessment;
-      if (!a) return;
+      if (!a) {
+        alert('No assessment data available for PDF report.');
+        return;
+      }
+
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF library did not load. Please refresh the page and try again.');
+        return;
+      }
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
