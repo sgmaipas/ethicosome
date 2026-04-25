@@ -1473,6 +1473,15 @@
         return;
       }
 
+      const oh = a.oneHealth || {
+        included: false,
+        relevance: 'Not assessed',
+        domain: 'Not applicable',
+        animalWelfare: 'Not applicable',
+        impact: 'Not applicable',
+        flags: []
+      };
+
       if (!window.jspdf || !window.jspdf.jsPDF) {
         alert('PDF library did not load. Please refresh the page and try again.');
         return;
@@ -1537,11 +1546,11 @@
         addField('Ethical load', a.ethicalLoadLabel);
 
         addSection('3. One Health Considerations');
-        addField('One Health module', a.oneHealth.included ? 'Included' : 'Not included');
-        addField('One Health relevance', a.oneHealth.relevance);
-        addField('Primary domain of concern', a.oneHealth.domain);
-        addField('Animal health or welfare concern', a.oneHealth.animalWelfare);
-        addField('Estimated One Health impact', a.oneHealth.impact);
+        addField('One Health module', oh.included ? 'Included' : 'Not included');
+        addField('One Health relevance', oh.relevance);
+        addField('Primary domain of concern', oh.domain);
+        addField('Animal health or welfare concern', oh.animalWelfare);
+        addField('Estimated One Health impact', oh.impact);
 
         addSection('4. Final Result');
         addField('Preliminary ethicosome after capped escalation', a.preliminaryEthicosome);
