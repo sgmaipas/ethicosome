@@ -304,6 +304,35 @@
       margin-top: 12px;
     }
 
+    .case-notes {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fbfdff;
+      overflow: hidden;
+    }
+
+    .case-notes summary {
+      cursor: pointer;
+      padding: 10px 12px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+      background: #f9fafb;
+    }
+
+    .case-notes summary:hover {
+      background: var(--accent-soft);
+    }
+
+    .case-notes-content {
+      padding: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      white-space: pre-wrap;
+    }
+
     .case-actions button {
       width: auto;
       margin: 0;
@@ -417,7 +446,7 @@
           </div>
 
           <button id="calculateBtn" type="button">Calculate Ethicosome</button>
-          <p class="disclaimer">This tool is intended for educational and research purposes only and does not replace formal risk assessment. Copyright: Sotirios G. Maipas. The development of this tool is the subject of a postdoctoral research project conducted at the Department of Nursing, University of the Peloponnese, Greece, under the supervision of Associate Professor Fotini Tzavella.</p>
+          <p class="disclaimer">This tool is intended for educational and research purposes only and does not replace formal risk assessment.</p>
         </div>
       </div>
 
@@ -1024,6 +1053,7 @@
         likelihood_guidance: c.likelihood_guidance || c.likelihoodGuidance || 'Possible',
         interpretation: c.interpretation || '',
         evidence_strength: c.evidence_strength || c.evidenceStrength || '',
+        notes: c.notes || '',
         sources: c.sources || []
       };
     }
@@ -1069,6 +1099,12 @@
             <dt>Evidence strength</dt><dd>${c.evidence_strength || 'Not specified'}</dd>
             <dt>Evidence sources</dt><dd>${renderSources(c.sources)}</dd>
           </dl>
+          ${c.notes ? `
+            <details class="case-notes">
+              <summary>Additional notes</summary>
+              <div class="case-notes-content">${c.notes}</div>
+            </details>
+          ` : ''}
           <div class="case-actions">
             <button type="button" onclick="applyLikelihoodValue(${suggestedValue})">Use suggested value (${suggestedValue}%)</button>
           </div>
@@ -1091,30 +1127,12 @@
 
       const { data, error } = await supabaseClient
         .from('cases')
-        .select(`
-          id,
-          category,
-          topic,
-          title,
-          context,
-          population,
-          exposure_pattern,
-          outcome,
-          evidence_type,
-          evidence_strength,
-          likelihood_guidance,
-          interpretation,
-          sources (
-            id,
-            title,
-            url
-          )
-        `)
+        .select('*, sources(*)')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Supabase error:', error);
-        dataStatus.textContent = 'Data source: Supabase error; using fallback';
+        dataStatus.textContent = `Data source: Supabase error (${error.message}); using fallback`;
         dataStatus.className = 'pill danger';
         caseStudies = fallbackCaseStudies;
         renderCaseCards();
