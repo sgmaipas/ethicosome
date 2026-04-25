@@ -514,8 +514,11 @@
               <span><strong>Uncertainty present</strong><br><span class="small muted">Evidence is limited, conflicting, or insufficient.</span></span>
             </label>
           </div>
-
-          <button id="calculateBtn" type="button">Calculate Ethicosome</button>
+          <div style="margin-top: 12px; padding: 8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px;">
+            <p class="small muted" style="margin: 0;">
+              Results update automatically based on your inputs.
+            </p>
+          </div>
           <p class="disclaimer">This tool is intended for educational and research purposes only and does not replace formal risk assessment.</p>
         </div>
       </div>
@@ -870,7 +873,6 @@
 
     const likelihoodInput = document.getElementById('likelihood');
     const likelihoodValue = document.getElementById('likelihoodValue');
-    const calculateBtn = document.getElementById('calculateBtn');
     const projectNameInput = document.getElementById('projectName');
 
     const likelihoodClassEl = document.getElementById('likelihoodClass');
@@ -1063,7 +1065,7 @@
 
       latestAssessment = {
         projectName,
-        date: new Date().toLocaleString(),
+        date: new Date().toISOString().slice(0, 19).replace('T', ' '),
         consequenceLabel,
         likelihoodLabel: likelihoodClass.label,
         percent,
@@ -1414,7 +1416,6 @@
     });
 
     projectNameInput.addEventListener('input', renderResults);
-    calculateBtn.addEventListener('click', renderResults);
     generatePdfBtn.addEventListener('click', generatePdfReport);
     renderResults();
     loadCasesFromSupabase();
