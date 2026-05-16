@@ -47,6 +47,35 @@
       box-shadow: var(--shadow);
     }
 
+    .tab-info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      margin-left: 6px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .category-info-popup {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: #1e40af;
+      font-size: 13px;
+    }
+
+    .category-info-popup.active {
+    display: block;
+    }
+
     h1, h2, h3 { margin: 0 0 12px 0; }
     p { margin: 0 0 12px 0; }
     .muted { color: var(--muted); }
@@ -720,6 +749,26 @@
       <input type="text" id="caseSearch" placeholder="Search by title, topic, outcome, population, or context..." />
 
       <div class="tabs" id="caseTabs"></div>
+      <div id="specialProjectsInfo" class="category-info-popup">
+        <strong>Special projects and activities — examples:</strong>
+        <ul>
+          <li>Antenna parks</li>
+          <li>Sports facilities</li>
+          <li>Construction material storage/distribution sites</li>
+          <li>Other projects or activities that do not fall within the previous categories</li>
+        </ul>
+    </div>
+
+      <div id="specialProjectsInfo" class="category-info-popup">
+        <strong>Special projects and activities — examples:</strong>
+        <ul style="margin-top:6px; padding-left:18px;">
+          <li>Antenna parks</li>
+          <li>Sports facilities</li>
+          <li>Construction material storage/distribution sites</li>
+          <li>Other projects or activities that do not fall within the previous categories</li>
+        </ul>
+      </div>
+
       <div id="caseCards"></div>
     </div>
   </div>
@@ -1351,12 +1400,32 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'tab-button' + (cat.key === activeCategory ? ' active' : '');
-        button.textContent = cat.label;
-        button.addEventListener('click', () => {
+
+        if (cat.key === 'special_projects') {
+          button.innerHTML = `${cat.label} <span class="tab-info-icon">i</span>`;
+        } else {
+          button.textContent = cat.label;
+        }
+
+        button.addEventListener('click', (event) => {
+          const clickedInfoIcon = event.target.classList.contains('tab-info-icon');
+
+          if (clickedInfoIcon && cat.key === 'special_projects') {
+            event.stopPropagation();
+            const popup = document.getElementById('specialProjectsInfo');
+            if (popup) popup.classList.toggle('active');
+            return;
+          }
+
           currentCategory = cat.key;
           document.getElementById('caseCategory').value = cat.key;
+
+          const popup = document.getElementById('specialProjectsInfo');
+          if (popup) popup.classList.remove('active');
+
           renderCaseCards();
         });
+
         tabs.appendChild(button);
       });
     }
