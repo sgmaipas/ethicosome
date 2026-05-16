@@ -767,6 +767,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here. Example: epidemiological study, monitoring report, EIA/ESIA evidence, systematic review, guideline, etc.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for this type of project.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE: Strong / Moderate / Limited / Mixed / Scenario-dependent',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -782,6 +783,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for hydraulic projects.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -797,6 +799,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for port projects.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -812,6 +815,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for environmental infrastructure systems.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -827,6 +831,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for extractive activities.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -842,6 +847,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for tourism, urban, building, sport or leisure projects.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -857,6 +863,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for poultry farms.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -872,6 +879,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for aquaculture.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -887,6 +895,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for processing, industrial and related facilities.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -902,6 +911,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for renewable energy projects.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -917,6 +927,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for transport of energy, fuel and chemicals.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -932,6 +943,7 @@
         outcome: 'Describe the potential or documented adverse outcome here.',
         evidence_type: 'Describe evidence type here.',
         likelihood_guidance: 'Possible',
+        harm_reported: false,
         interpretation: 'Explain how this evidence can support likelihood estimation for special projects and activities.',
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
@@ -1325,6 +1337,7 @@
         outcome: c.outcome || '',
         evidence_type: c.evidence_type || c.evidenceType || '',
         likelihood_guidance: c.likelihood_guidance || c.likelihoodGuidance || 'Possible',
+        harm_reported: c.harm_reported === true,
         interpretation: c.interpretation || '',
         evidence_strength: c.evidence_strength || c.evidenceStrength || '',
         notes: c.notes || '',
@@ -1350,13 +1363,19 @@
         .filter(c => c.category === currentCategory)
         .filter(c => caseMatchesSearch(c, currentSearch));
 
+        const totalCases = filtered.length;
+        const harmfulCases = filtered.filter(c => c.harm_reported === true).length;
+        const evidenceDerivedValue = totalCases > 0
+          ? Math.round((harmfulCases / totalCases) * 100)
+          : 0;
+
       if (!filtered.length) {
         container.innerHTML = '<p class="muted">No case studies available for this category/search yet.</p>';
         return;
       }
 
       filtered.forEach(c => {
-        const suggestedValue = guidanceToSuggestedValue(c.likelihood_guidance);
+        const suggestedValue = evidenceDerivedValue;
         const card = document.createElement('div');
         card.className = 'case-card';
         card.innerHTML = `
@@ -1380,7 +1399,15 @@
             </details>
           ` : ''}
           <div class="case-actions">
-            <button type="button" onclick="applyLikelihoodValue(${suggestedValue})">Use suggested value (${suggestedValue}%)</button>
+            <button 
+              type="button" 
+              onclick="applyLikelihoodValue(${suggestedValue})">
+              Use evidence-derived value (${suggestedValue}%)
+            </button>
+
+            <p class="small muted" style="margin-top:8px;">
+              Based on ${harmfulCases} cases reporting harm out of ${totalCases} relevant cases.
+            </p>
           </div>
         `;
         container.appendChild(card);
