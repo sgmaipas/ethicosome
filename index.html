@@ -1381,7 +1381,9 @@
         card.innerHTML = `
           <h3>${c.title}</h3>
           <span class="pill blue">${c.topic || 'Topic not specified'}</span>
-          <span class="pill warn">Likelihood guidance: ${c.likelihood_guidance}</span>
+          <span class="pill ${c.harm_reported ? 'danger' : 'ok'}">
+            Harm reported: ${c.harm_reported ? 'Yes' : 'No'}
+          </span>
           <dl>
             <dt>Context</dt><dd>${c.context || 'Not specified'}</dd>
             <dt>Population</dt><dd>${c.population || 'Not specified'}</dd>
@@ -1389,8 +1391,14 @@
             <dt>Outcome</dt><dd>${c.outcome || 'Not specified'}</dd>
             <dt>Evidence type</dt><dd>${c.evidence_type || 'Not specified'}</dd>
             <dt>Interpretation</dt><dd>${c.interpretation || 'Not specified'}</dd>
-            <dt>Evidence strength</dt><dd>${c.evidence_strength || 'Not specified'}</dd>
-            <dt>Evidence sources</dt><dd>${renderSources(c.sources)}</dd>
+            <dt>Evidence strength</dt>
+            <dd>${c.evidence_strength || 'Not specified'}</dd>
+
+            <dt>Harm reported</dt>
+            <dd>${c.harm_reported ? 'Yes' : 'No'}</dd>
+
+            <dt>Evidence sources</dt>
+            <dd>${renderSources(c.sources)}</dd>
           </dl>
           ${c.notes ? `
             <details class="case-notes">
