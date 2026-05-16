@@ -712,6 +712,8 @@
         <option value="renewable_energy">Renewable energy sources</option>
         <option value="energy_fuel_chemical_transport">Transport of energy, fuel and chemicals</option>
         <option value="special_projects">Special projects and activities</option>
+        <option value="everyday_exposures">Everyday Environmental Health exposures</option>
+        <option value="animal_environmental_exposures">Animal Environmental Exposures</option>
       </select>
 
       <label for="caseSearch">Search cases</label>
@@ -948,6 +950,38 @@
         evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
         sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
         is_template: true
+      },
+      {
+        category: 'everyday_exposures',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe the everyday exposure context here. Example: cosmetic use, smartphone cases, plastics, PFAS-containing consumer products, indoor exposures, cleaning products, or wearable devices.',
+        population: 'Describe the exposed population here. Example: general consumers, children, adolescents, pregnant individuals, workers, or frequent users.',
+        exposure_pattern: 'Describe exposure pattern here. Example: repeated dermal contact, inhalation, hand-to-mouth transfer, heat-related degradation, UV exposure, or chronic low-level exposure.',
+        harm_reported: false,
+        outcome: 'Describe the potential or documented adverse outcome here.',
+        evidence_type: 'Describe evidence type here. Example: experimental study, biomonitoring study, exposure assessment, systematic review, regulatory report, or case study.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for everyday environmental health exposures.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
+      },
+      {
+        category: 'animal_environmental_exposures',
+        topic: 'ADD TOPIC HERE',
+        title: 'ADD CASE TITLE HERE',
+        context: 'Describe the animal environmental exposure context here. Example: pesticide exposure in bees, PFAS exposure in companion animals, RF exposure in ticks, livestock air pollution exposure, wildlife contamination, or aquatic toxic exposure.',
+        population: 'Describe the animal population here. Example: companion animals, livestock, wildlife, pollinators, aquatic organisms, or vectors.',
+        exposure_pattern: 'Describe exposure pattern here. Example: ingestion, inhalation, dermal exposure, environmental contamination, chronic low-level exposure, or behavioral exposure.',
+        harm_reported: false,
+        outcome: 'Describe the potential or documented animal health, welfare, behavioral, ecological, or One Health-related outcome here.',
+        evidence_type: 'Describe evidence type here. Example: experimental study, field study, biomonitoring study, ecotoxicological study, systematic review, surveillance report, or case study.',
+        likelihood_guidance: 'Possible',
+        interpretation: 'Explain how this evidence can support likelihood estimation for animal environmental exposures.',
+        evidence_strength: 'ADD EVIDENCE STRENGTH HERE',
+        sources: [{ title: 'ADD SOURCE TITLE HERE', url: 'ADD SOURCE URL HERE' }],
+        is_template: true
       }
     ];
 
@@ -963,7 +997,9 @@
       { key: 'processing_industrial', label: 'Processing, industrial and related facilities' },
       { key: 'renewable_energy', label: 'Renewable energy sources' },
       { key: 'energy_fuel_chemical_transport', label: 'Transport of energy, fuel and chemicals' },
-      { key: 'special_projects', label: 'Special projects and activities' }
+      { key: 'special_projects', label: 'Special projects and activities' },
+      { key: 'everyday_exposures', label: 'Everyday Environmental Health Exposures' },
+      { key: 'animal_environmental_exposures', label: 'Animal Environmental Exposures' },
     ];
 
     const likelihoodInput = document.getElementById('likelihood');
