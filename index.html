@@ -1388,15 +1388,13 @@
             <dt>Context</dt><dd>${c.context || 'Not specified'}</dd>
             <dt>Population</dt><dd>${c.population || 'Not specified'}</dd>
             <dt>Exposure pattern</dt><dd>${c.exposure_pattern || 'Not specified'}</dd>
+             <dt>Harm reported</dt>
+            <dd>${c.harm_reported ? 'Yes' : 'No'}</dd>
             <dt>Outcome</dt><dd>${c.outcome || 'Not specified'}</dd>
             <dt>Evidence type</dt><dd>${c.evidence_type || 'Not specified'}</dd>
             <dt>Interpretation</dt><dd>${c.interpretation || 'Not specified'}</dd>
             <dt>Evidence strength</dt>
             <dd>${c.evidence_strength || 'Not specified'}</dd>
-
-            <dt>Harm reported</dt>
-            <dd>${c.harm_reported ? 'Yes' : 'No'}</dd>
-
             <dt>Evidence sources</dt>
             <dd>${renderSources(c.sources)}</dd>
           </dl>
