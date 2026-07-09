@@ -644,7 +644,7 @@
           </div>
 
           <div class="result-box">
-            <h3>Classical risk</h3>
+            <h3>Classical Risk (Likelihood × Consequence)</h3>
             <p id="classicalRisk">—</p>
           </div>
 
@@ -1307,7 +1307,11 @@
       const oneHealth = getOneHealthAssessment();
 
       likelihoodClassEl.textContent = `${likelihoodClass.label} (${percent}%)`;
-      classicalRiskEl.textContent = `${classicalRisk} (${consequenceLabel})`;
+      classicalRiskEl.innerHTML = `
+        <strong>${classicalRisk}</strong><br>
+        <span class="small muted">Likelihood: ${likelihoodClass.label} (${percent}%)</span><br>
+         <span class="small muted">Consequence: ${consequenceLabel}</span>
+      `;
       harmPotentialEl.textContent = harm.label;
       ethicalLoadEl.textContent = ethicalLoad.label;
       ethicosomeEl.textContent = finalEthicosome;
