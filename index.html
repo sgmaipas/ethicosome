@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ethicosome v1 — Research Tool</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
@@ -708,7 +707,7 @@
             <li>Harm potential is derived from consequence and exposure context.</li>
             <li>Ethical load drives capped escalation: +0, +1, or +2 levels.</li>
             <li>Bypass of vulnerable populations is recorded and flagged.</li>
-            <li>Case studies are loaded from Supabase when credentials are configured.</li>
+            <li>Case studies are loaded from the published Ethicosome evidence dataset.</li>
           </ul>
         </div>
       </div>
@@ -778,22 +777,10 @@
 
   <script>
     // =============================
-    // SUPABASE CONFIGURATION
+    // GOOGLE SHEETS DATA SOURCE
     // =============================
-    // Replace these with your Supabase project URL and anon public key.
-    // Never use the service_role key in frontend code.
-    const SUPABASE_URL = 'https://pgngeqnuhzmgjioraobd.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_Z9onAH0Yd3dA_qxwPLrgCQ_3jjC-1fy';
-
-    const supabaseConfigured =
-      SUPABASE_URL &&
-      SUPABASE_ANON_KEY &&
-      !SUPABASE_URL.includes('ADD_') &&
-      !SUPABASE_ANON_KEY.includes('ADD_');
-
-    const supabaseClient = supabaseConfigured
-      ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
+    const CASES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0_DMt5OmyhWI67Szke9m-iu4vgzNC1_1_vxOr5dmokF8LX-RzjbMR7zYmnzpXMW9-phOennIP2PWO/pub?gid=0&single=true&output=csv';
+    const SOURCES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ0_DMt5OmyhWI67Szke9m-iu4vgzNC1_1_vxOr5dmokF8LX-RzjbMR7zYmnzpXMW9-phOennIP2PWO/pub?gid=388135552&single=true&output=csv';
 
     let caseStudies = [];
     let currentCategory = 'land_air_transport';
@@ -1521,35 +1508,116 @@
       });
     }
 
-    async function loadCasesFromSupabase() {
-      if (!supabaseClient) {
-        dataStatus.textContent = 'Data source: local fallback templates';
-        dataStatus.className = 'pill warn';
-        caseStudies = fallbackCaseStudies;
-        renderCaseCards();
-        return;
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let value = '';
+      let quoted = false;
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && quoted && next === '"') {
+          value += '"';
+          i += 1;
+        } else if (char === '"') {
+          quoted = !quoted;
+        } else if (char === ',' && !quoted) {
+          row.push(value);
+          value = '';
+        } else if ((char === '\n' || char === '\r') && !quoted) {
+          if (char === '\r' && next === '\n') i += 1;
+          row.push(value);
+          if (row.some(cell => cell.trim() !== '')) rows.push(row);
+          row = [];
+          value = '';
+        } else {
+          value += char;
+        }
       }
 
-      dataStatus.textContent = 'Data source: loading from Supabase...';
+      row.push(value);
+      if (row.some(cell => cell.trim() !== '')) rows.push(row);
+      return rows;
+    }
+
+    function csvToObjects(text) {
+      const rows = parseCsv(text);
+      if (!rows.length) return [];
+      const headers = rows[0].map((header, index) =>
+        (index === 0 ? header.replace(/^\uFEFF/, '') : header).trim()
+      );
+
+      return rows.slice(1).map(row =>
+        Object.fromEntries(headers.map((header, index) => [header, (row[index] || '').trim()]))
+      );
+    }
+
+    function sheetBoolean(value) {
+      return ['true', 'yes', '1'].includes(String(value).trim().toLowerCase());
+    }
+
+    async function loadCasesFromGoogleSheets() {
+      dataStatus.textContent = 'Data source: loading from Google Sheets...';
       dataStatus.className = 'pill blue';
 
-      const { data, error } = await supabaseClient
-        .from('cases')
-        .select('*, sources(*)')
-        .order('created_at', { ascending: false });
+      try {
+        const [casesResponse, sourcesResponse] = await Promise.all([
+          fetch(CASES_CSV_URL, { cache: 'no-store' }),
+          fetch(SOURCES_CSV_URL, { cache: 'no-store' })
+        ]);
 
-      if (error) {
-        console.error('Supabase error:', error);
-        dataStatus.textContent = `Data source: Supabase error (${error.message}); using fallback`;
-        dataStatus.className = 'pill danger';
+        if (!casesResponse.ok || !sourcesResponse.ok) {
+          throw new Error('The published Google Sheets data could not be retrieved.');
+        }
+
+        const [caseRows, sourceRows] = await Promise.all([
+          casesResponse.text().then(csvToObjects),
+          sourcesResponse.text().then(csvToObjects)
+        ]);
+
+        const sourcesByCase = sourceRows.reduce((grouped, source) => {
+          if (!source.case_id) return grouped;
+          if (!grouped[source.case_id]) grouped[source.case_id] = [];
+          if (source.source_title || source.source_url) {
+            grouped[source.case_id].push({
+              title: source.source_title || 'Source',
+              url: source.source_url || ''
+            });
+          }
+          return grouped;
+        }, {});
+
+        caseStudies = caseRows
+          .filter(item => item.case_id && item.category)
+          .map(item => ({
+            id: item.case_id,
+            category: item.category,
+            topic: item.topic,
+            title: item.title,
+            context: item.context,
+            population: item.population,
+            exposure_pattern: item.exposure_pattern,
+            harm_reported: sheetBoolean(item.harm_reported),
+            outcome: item.outcome,
+            evidence_type: item.evidence_type,
+            likelihood_guidance: item.likelihood_guidance || 'Possible',
+            interpretation: item.interpretation,
+            evidence_strength: item.evidence_strength,
+            notes: item.notes,
+            sources: sourcesByCase[item.case_id] || []
+          }));
+
+        dataStatus.textContent = `Data source: Google Sheets (${caseStudies.length} cases loaded)`;
+        dataStatus.className = 'pill ok';
+      } catch (error) {
+        console.error('Google Sheets error:', error);
+        dataStatus.textContent = 'Data source: Google Sheets unavailable; using local fallback templates';
+        dataStatus.className = 'pill warn';
         caseStudies = fallbackCaseStudies;
-        renderCaseCards();
-        return;
       }
 
-      caseStudies = data || [];
-      dataStatus.textContent = `Data source: Supabase (${caseStudies.length} cases loaded)`;
-      dataStatus.className = 'pill ok';
       renderCaseCards();
     }
 
@@ -1772,7 +1840,7 @@
     projectNameInput.addEventListener('input', renderResults);
     generatePdfBtn.addEventListener('click', generatePdfReport);
     renderResults();
-    loadCasesFromSupabase();
+    loadCasesFromGoogleSheets();
   </script>
 </body>
 </html>
